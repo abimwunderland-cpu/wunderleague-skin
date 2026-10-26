@@ -1,0 +1,5 @@
+# Generate a free API key at https://account.mineskin.org/keys
+mineskin-api-key: ""
+# Players online when /wu start runs will be dressed; players joining during an active event too.
+# MineSkin has rate limits. New player skins are queued, not applied instantly.
+apply-on-join: true

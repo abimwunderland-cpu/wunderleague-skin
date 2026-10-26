@@ -1,0 +1,14 @@
+name: WunderlandUniforms
+version: '1.0.0'
+main: de.wolfsfell.uniforms.WunderlandUniforms
+api-version: '1.21'
+author: WolfsfellTV
+description: HorrorOlympics Wunderland uniforms with original player heads
+commands:
+  wu:
+    description: Manage Wunderland uniforms
+    usage: /wu <start|stop|reload|status>
+    permission: wunderlanduniforms.admin
+permissions:
+  wunderlanduniforms.admin:
+    default: op
