@@ -1,1 +1,1 @@
-rootProject.name = "WunderlandUniforms"
+rootProject.name = "WunderleagueSkins"
