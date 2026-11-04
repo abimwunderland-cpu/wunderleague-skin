@@ -1,12 +1,12 @@
 name: WunderleagueSkins
-version: 1.0.0
+version: 1.1.0
 main: de.wunderleague.skins.WunderleagueSkins
 api-version: '1.21.11'
 author: WolfsfellTV
 commands:
   wl:
     description: Wunderleague event skins
-    usage: /wl <join|leave|on|off|reload|status>
+    usage: /wl <status|on|off|all|reload|add|remove>
 permissions:
   wunderleague.admin:
     default: op

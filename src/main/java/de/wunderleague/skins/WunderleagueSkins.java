@@ -48,7 +48,7 @@ public final class WunderleagueSkins extends JavaPlugin implements Listener {
             }
         } catch (IOException ex) { getLogger().severe("Storage initialization failed: " + ex); }
         Bukkit.getPluginManager().registerEvents(this, this);
-        Bukkit.getScheduler().runTaskLater(this, () -> { if (active) Bukkit.getOnlinePlayers().forEach(p -> { if (participants.contains(p.getUniqueId())) apply(p); }); }, 20L);
+        Bukkit.getScheduler().runTaskLater(this, () -> { if (active) Bukkit.getOnlinePlayers().forEach(p -> { { participants.add(p.getUniqueId()); apply(p); } }); }, 20L);
     }
     @Override public void onDisable() {
         Bukkit.getOnlinePlayers().forEach(this::restore);
@@ -60,33 +60,30 @@ public final class WunderleagueSkins extends JavaPlugin implements Listener {
     }
     @EventHandler public void onJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
-        if (active && participants.contains(p.getUniqueId())) Bukkit.getScheduler().runTaskLater(this, () -> { if (p.isOnline()) apply(p); }, 30L);
+        participants.add(p.getUniqueId()); persist();
+        if (active) Bukkit.getScheduler().runTaskLater(this, () -> { if (p.isOnline()) apply(p); }, 30L);
     }
     @EventHandler public void onQuit(PlayerQuitEvent event) {
         // Server-local profile changes are not Mojang account skin changes.
         originals.remove(event.getPlayer().getUniqueId()); busy.remove(event.getPlayer().getUniqueId());
     }
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0) { sender.sendMessage("§d/wl join, leave, status §7| Admin: on, off, reload, add <player>, remove <player>"); return true; }
+        if (args.length == 0) { sender.sendMessage("§d/wl status §7| Admin: on, off, all, reload, add <player>, remove <player>"); return true; }
         String sub = args[0].toLowerCase(Locale.ROOT);
         if (sub.equals("status")) { sender.sendMessage("§dWunderleague: §f" + (active ? "aktiv" : "aus") + " §7| Teilnehmer: " + participants.size()); return true; }
-        if (sub.equals("join") || sub.equals("leave")) {
-            if (!(sender instanceof Player p)) { sender.sendMessage("Only players can use this."); return true; }
-            if (sub.equals("join")) { participants.add(p.getUniqueId()); persist(); if (active) apply(p); p.sendMessage("§dDu bist bei Wunderleague angemeldet."); }
-            else { participants.remove(p.getUniqueId()); persist(); restore(p); p.sendMessage("§7Du bist abgemeldet."); }
-            return true;
-        }
+        if (sub.equals("join") || sub.equals("leave")) { sender.sendMessage("§cNur Event-Admins können Wunderleague-Skins verwalten."); return true; }
         if (!sender.hasPermission("wunderleague.admin")) { sender.sendMessage("§cKeine Berechtigung."); return true; }
         switch (sub) {
-            case "on" -> { active = true; getConfig().set("enabled", true); saveConfig(); Bukkit.getOnlinePlayers().forEach(p -> { if (participants.contains(p.getUniqueId())) apply(p); }); sender.sendMessage("§aWunderleague aktiviert."); }
+            case "on" -> { active = true; getConfig().set("enabled", true); saveConfig(); Bukkit.getOnlinePlayers().forEach(p -> { { participants.add(p.getUniqueId()); apply(p); } }); sender.sendMessage("§aWunderleague aktiviert."); }
             case "off" -> { active = false; getConfig().set("enabled", false); saveConfig(); Bukkit.getOnlinePlayers().forEach(this::restore); sender.sendMessage("§eWunderleague deaktiviert."); }
+            case "all" -> { Bukkit.getOnlinePlayers().forEach(p -> { participants.add(p.getUniqueId()); if (active) apply(p); }); persist(); sender.sendMessage("§aAlle Online-Spieler für Wunderleague aktiviert."); }
             case "reload" -> { reloadConfig(); active = getConfig().getBoolean("enabled", true); sender.sendMessage("§aKonfiguration geladen."); }
             case "add", "remove" -> {
                 if (args.length < 2) { sender.sendMessage("§c/wl " + sub + " <online-player>"); break; }
                 Player target = Bukkit.getPlayerExact(args[1]);
                 if (target == null) { sender.sendMessage("§cSpieler muss online sein."); break; }
                 if (sub.equals("add")) { participants.add(target.getUniqueId()); persist(); if (active) apply(target); }
-                else { participants.remove(target.getUniqueId()); persist(); restore(target); }
+                else { participants.remove(target.getUniqueId()); persist(); restore(target); sender.sendMessage("§eAchtung: Beim nächsten Join wird der Spieler automatisch wieder angemeldet."); }
                 sender.sendMessage("§aTeilnehmerliste aktualisiert.");
             }
             default -> sender.sendMessage("§cUnbekannter Befehl.");
